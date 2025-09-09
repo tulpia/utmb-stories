@@ -1,3 +1,4 @@
+// Utils
 import {
   Color,
   ColorRepresentation,
@@ -10,12 +11,20 @@ import {
 } from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import GUI from 'lil-gui';
+
+// Classes
 import UTMBLoader from './UTMBLoader';
+import UTMBSceneManager from './UTMBSceneManager';
+import SceneTest1 from './scenes/SceneTest1';
+import SceneTest2 from './scenes/SceneTest2';
+import SceneTest3 from './scenes/SceneTest3';
+import SceneTest4 from './scenes/SceneTest4';
 
 class UTMBMap {
   scene: Scene;
   camera: PerspectiveCamera;
   renderer: WebGLRenderer;
+  sceneManager!: UTMBSceneManager;
   controls!: OrbitControls;
   light!: DirectionalLight;
   trace!: Mesh;
@@ -33,13 +42,19 @@ class UTMBMap {
     const loader = new UTMBLoader();
     loader.loadModels().then(([mapObject, traceObject]) => {
       this.trace = traceObject.children[0];
-      this.light.target = mapObject;
-      // this.camera.lookAt(mapObject.position);
-      this.scene.add(this.trace);
       this.trace.geometry.setDrawRange(0, 0);
+      (this.trace.material as MeshStandardMaterial).color.set('#D70A2C');
+      this.light.target = mapObject;
+      this.camera.lookAt(mapObject.position);
+      this.scene.add(this.trace);
       this.scene.add(mapObject);
 
-      this.addDebug();
+      this.sceneManager = new UTMBSceneManager(this.trace, [
+        new SceneTest1(),
+        new SceneTest2(),
+        new SceneTest3(),
+        new SceneTest4(),
+      ]);
     });
   }
 
@@ -48,7 +63,7 @@ class UTMBMap {
   }
 
   addLights(): void {
-    this.light = new DirectionalLight(0xffffff, 1);
+    this.light = new DirectionalLight(0xffffff, 2);
     this.scene.add(this.light);
   }
 

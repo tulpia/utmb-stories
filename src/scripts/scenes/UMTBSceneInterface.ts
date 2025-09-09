@@ -1,4 +1,4 @@
-interface Scene {
+interface UMTBSceneInterface {
   pathPosition: number;
   cameraPosition: number;
 
@@ -6,4 +6,4 @@ interface Scene {
   onExit(): void;
 }
 
-export default Scene;
+export default UMTBSceneInterface;

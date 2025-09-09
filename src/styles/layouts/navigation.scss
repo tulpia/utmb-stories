@@ -1,0 +1,17 @@
+.btns {
+  position: fixed;
+  bottom: 50px;
+  left: 50%;
+  transform: translateX(-50%);
+
+  button {
+    background: white;
+    border: 1px solid grey;
+    border-radius: 5px;
+    padding: 20px;
+
+    &:disabled {
+      opacity: 0.5;
+    }
+  }
+}
