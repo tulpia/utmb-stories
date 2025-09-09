@@ -1,5 +1,5 @@
-import './style.css';
-import UTMBMap from './UTMBMap';
+import './styles/main.scss';
+import UTMBMap from './scripts/UTMBMap';
 
 const map: UTMBMap = new UTMBMap();
 map.addControls();

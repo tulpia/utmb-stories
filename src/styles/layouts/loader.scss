@@ -1,0 +1,37 @@
+.loader {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: black;
+  z-index: 200;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+
+  &.--hidden {
+    opacity: 0;
+    transition: opacity 250ms linear;
+    pointer-events: none;
+  }
+
+  &__progress-bar {
+    background: rgba($color: white, $alpha: 0.25);
+    width: 50%;
+    height: 2px;
+    display: block;
+    position: relative;
+    z-index: 1;
+    transition: width 150ms ease-in-out;
+
+    &.--inner {
+      background: white;
+      height: 100%;
+      width: 0%;
+      position: absolute;
+      top: 0;
+      left: 0;
+    }
+  }
+}

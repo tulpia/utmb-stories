@@ -6,9 +6,9 @@ import {
   Scene,
   WebGLRenderer,
 } from 'three';
-import { GLTFLoader } from 'three/examples/jsm/Addons.js';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import GUI from 'lil-gui';
+import Loader from './Loader';
 
 class UTMBMap {
   scene: Scene;
@@ -20,15 +20,22 @@ class UTMBMap {
   constructor() {
     this.scene = new Scene();
     this.scene.background = new Color(0, 0, 0);
-    this.camera = new PerspectiveCamera(80, window.innerWidth / window.innerHeight, 0.1, 1000);
+    this.camera = new PerspectiveCamera(40, window.innerWidth / window.innerHeight, 0.1, 1000);
     this.renderer = new WebGLRenderer();
-
     this.camera.position.set(5, 10, 5);
 
     this.addLights();
-    this.addFile();
-    this.addDebug();
     this.render();
+
+    const loader = new Loader();
+    loader.loadModels().then(([map]) => {
+      this.light.target = map;
+      this.scene.add(map);
+      this.scene.add(this.light.target);
+      this.camera.lookAt(map.position);
+
+      this.addDebug();
+    });
   }
 
   addControls(): void {
@@ -38,24 +45,6 @@ class UTMBMap {
   addLights(): void {
     this.light = new DirectionalLight(0xffffff, 0.75);
     this.scene.add(this.light);
-  }
-
-  addFile(): void {
-    const loader = new GLTFLoader();
-
-    loader.load(
-      '/models/utmb.glb',
-      (gltf) => {
-        this.light.target = gltf.scene;
-        this.scene.add(gltf.scene);
-        this.scene.add(this.light.target);
-        this.camera.lookAt(gltf.scene.position);
-      },
-      undefined,
-      (error) => {
-        console.error('Error loading GLB:', error);
-      },
-    );
   }
 
   addDebug(): void {
@@ -74,7 +63,7 @@ class UTMBMap {
     lightFolder.add(this.light.position, 'x', -10, 10, 0.1);
     lightFolder.add(this.light.position, 'y', -10, 10, 0.1);
     lightFolder.add(this.light.position, 'z', -10, 10, 0.1);
-    lightFolder.add(this.light, 'intensity', 0, 1, 0.01);
+    lightFolder.add(this.light, 'intensity', 0, 3, 0.01);
     lightFolder.addColor(obj, 'color').onChange((value: ColorRepresentation) => {
       this.light.color.set(value);
     });
