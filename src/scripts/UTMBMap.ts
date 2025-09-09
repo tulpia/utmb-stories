@@ -2,13 +2,15 @@ import {
   Color,
   ColorRepresentation,
   DirectionalLight,
+  Mesh,
+  MeshStandardMaterial,
   PerspectiveCamera,
   Scene,
   WebGLRenderer,
 } from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import GUI from 'lil-gui';
-import Loader from './Loader';
+import UTMBLoader from './UTMBLoader';
 
 class UTMBMap {
   scene: Scene;
@@ -16,10 +18,11 @@ class UTMBMap {
   renderer: WebGLRenderer;
   controls!: OrbitControls;
   light!: DirectionalLight;
+  trace!: Mesh;
 
   constructor() {
     this.scene = new Scene();
-    this.scene.background = new Color(0, 0, 0);
+    this.scene.background = new Color(255, 255, 255);
     this.camera = new PerspectiveCamera(40, window.innerWidth / window.innerHeight, 0.1, 1000);
     this.renderer = new WebGLRenderer();
     this.camera.position.set(5, 10, 5);
@@ -27,12 +30,14 @@ class UTMBMap {
     this.addLights();
     this.render();
 
-    const loader = new Loader();
-    loader.loadModels().then(([map]) => {
-      this.light.target = map;
-      this.scene.add(map);
-      this.scene.add(this.light.target);
-      this.camera.lookAt(map.position);
+    const loader = new UTMBLoader();
+    loader.loadModels().then(([mapObject, traceObject]) => {
+      this.trace = traceObject.children[0];
+      this.light.target = mapObject;
+      // this.camera.lookAt(mapObject.position);
+      this.scene.add(this.trace);
+      this.trace.geometry.setDrawRange(0, 0);
+      this.scene.add(mapObject);
 
       this.addDebug();
     });
@@ -43,7 +48,7 @@ class UTMBMap {
   }
 
   addLights(): void {
-    this.light = new DirectionalLight(0xffffff, 0.75);
+    this.light = new DirectionalLight(0xffffff, 1);
     this.scene.add(this.light);
   }
 
@@ -59,7 +64,7 @@ class UTMBMap {
       this.scene.background = new Color(value);
     });
 
-    const lightFolder = gui.addFolder('Light');
+    const lightFolder: GUI = gui.addFolder('Light');
     lightFolder.add(this.light.position, 'x', -10, 10, 0.1);
     lightFolder.add(this.light.position, 'y', -10, 10, 0.1);
     lightFolder.add(this.light.position, 'z', -10, 10, 0.1);
@@ -68,10 +73,22 @@ class UTMBMap {
       this.light.color.set(value);
     });
 
-    const cameraFolder = gui.addFolder('Camera');
+    const cameraFolder: GUI = gui.addFolder('Camera');
     cameraFolder.add(this.camera.position, 'x', -100, 100, 0.1);
     cameraFolder.add(this.camera.position, 'y', -100, 100, 0.1);
     cameraFolder.add(this.camera.position, 'z', -100, 100, 0.1);
+    const debug = {
+      start: 0,
+      count: 0,
+      max: this.trace.geometry?.index?.count,
+    };
+    const traceFolder: GUI = gui.addFolder('Trace');
+    traceFolder.add(debug, 'count', debug.start, debug.max, 1).onChange((v: number) => {
+      this.trace.geometry.setDrawRange(debug.start, v);
+    });
+    traceFolder.addColor(obj, 'color').onChange((value: ColorRepresentation) => {
+      (this.trace.material as MeshStandardMaterial).color.set(value);
+    });
   }
 
   render(): void {
