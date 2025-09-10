@@ -2,5 +2,5 @@
 @use 'the-new-css-reset/css/reset.css';
 
 // Layouts
-@import './layouts/loader.scss';
-@import './layouts/navigation.scss';
+@use './layouts/loader.scss';
+@use './layouts/navigation.scss';

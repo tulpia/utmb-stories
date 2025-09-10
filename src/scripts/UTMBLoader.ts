@@ -16,18 +16,19 @@ class UTMBLoader {
     this.progressManager();
   }
 
-  async loadModels(): Promise<[Group, Group]> {
+  async loadModels(): Promise<[Group, Group, Group]> {
     const loadGLTF = (url: string) =>
       new Promise<Group>((resolve, reject) => {
         this.gltfLoader.load(url, (gltf) => resolve(gltf.scene), undefined, reject);
       });
 
-    const [map, trace] = await Promise.all([
+    const [map, trace, character] = await Promise.all([
       loadGLTF('/models/carte.glb'),
       loadGLTF('/models/trace.glb'),
+      loadGLTF('/models/character.glb'),
     ]);
 
-    return [map, trace];
+    return [map, trace, character];
   }
 
   progressManager(): void {

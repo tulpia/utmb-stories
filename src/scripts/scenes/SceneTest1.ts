@@ -2,7 +2,7 @@
 import UMTBSceneInterface from './UMTBSceneInterface';
 
 class SceneTest1 implements UMTBSceneInterface {
-  pathPosition: number = 3408;
+  pathPosition: number = 5;
   cameraPosition: number = 1123;
 
   onEnter(): void {
