@@ -35,7 +35,7 @@ class UTMBMap {
   sceneManager!: UTMBSceneManager;
 
   // Objects
-  trace!: Mesh;
+  tempTrace!: Mesh;
   character!: Mesh;
 
   constructor() {
@@ -51,9 +51,7 @@ class UTMBMap {
 
     const loader = new UTMBLoader();
     loader.loadModels().then(([mapObject, traceObject, characterObject]) => {
-      this.trace = traceObject.children[0];
-      this.trace.geometry.setDrawRange(0, 0);
-      (this.trace.material as MeshStandardMaterial).color.set('#D70A2C');
+      this.tempTrace = traceObject.children[0];
 
       // @todo : importer depuis le gltf que jo va me passer
       this.character = characterObject.children[0];
@@ -64,7 +62,6 @@ class UTMBMap {
 
       this.light.target = mapObject;
       this.camera.lookAt(mapObject.position);
-      this.scene.add(this.trace);
       this.scene.add(this.character);
       this.scene.add(mapObject);
 
