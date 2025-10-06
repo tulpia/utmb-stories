@@ -1,15 +1,12 @@
 // Utils
 import {
-  AxesHelper,
   Color,
   ColorRepresentation,
-  ConeGeometry,
   DirectionalLight,
+  LineSegments,
   Mesh,
-  MeshStandardMaterial,
   PerspectiveCamera,
   Scene,
-  SphereGeometry,
   WebGLRenderer,
 } from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
@@ -17,6 +14,7 @@ import GUI from 'lil-gui';
 
 // Classes
 import UTMBLoader from './UTMBLoader';
+// eslint-disable-next-line import/no-cycle
 import UTMBSceneManager from './UTMBSceneManager';
 import SceneTest1 from './scenes/SceneTest1';
 import SceneTest2 from './scenes/SceneTest2';
@@ -35,13 +33,12 @@ class UTMBMap {
   sceneManager!: UTMBSceneManager;
 
   // Objects
-  tempTrace!: Mesh;
   character!: Mesh;
 
   constructor() {
     this.scene = new Scene();
     this.scene.background = new Color(255, 255, 255);
-    this.camera = new PerspectiveCamera(40, window.innerWidth / window.innerHeight, 0.1, 1000);
+    this.camera = new PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 1000);
     this.camera.position.set(5, 10, 5);
     this.renderer = new WebGLRenderer();
 
@@ -50,22 +47,20 @@ class UTMBMap {
     this.addControls();
 
     const loader = new UTMBLoader();
-    loader.loadModels().then(([mapObject, traceObject, characterObject]) => {
-      this.tempTrace = traceObject.children[0];
+    loader.loadModels().then(([mapObject, traceObject, characterObject, mapPathObject]) => {
+      const [trace] = traceObject.children;
+      const [mapPath] = mapPathObject.children;
+      const [character] = characterObject.children;
 
-      // @todo : importer depuis le gltf que jo va me passer
-      this.character = characterObject.children[0];
+      this.character = character;
       this.character.scale.set(4, 4, 4);
-      // Add axis helper to the cube
-      const axesHelper = new AxesHelper(2); // size = 2 units
-      this.character.add(axesHelper);
 
       this.light.target = mapObject;
       this.camera.lookAt(mapObject.position);
       this.scene.add(this.character);
       this.scene.add(mapObject);
 
-      this.sceneManager = new UTMBSceneManager(this, [
+      this.sceneManager = new UTMBSceneManager(this, trace, mapPath, [
         new SceneTest1(),
         new SceneTest2(),
         new SceneTest3(),

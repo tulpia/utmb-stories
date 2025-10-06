@@ -16,5 +16,6 @@
 - [x] Convertir les coordonées en pourcentage de complétion du tracé
 - [x] Ajouter l'objet sur le bout du tracé
 - [x] Le faire bouger en même temps que le tracé
-- [ ] Faire un trace pour le parcours de la camera et l'importer
-- [ ] Faire avancer la carte au point de la camera avec le sceneManager
+- [x] Faire un trace pour le parcours de la camera et l'importer
+- [ ] Faire le move au scroll
+- [ ] Le faire de manière smooth (lerp)

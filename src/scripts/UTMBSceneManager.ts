@@ -5,6 +5,7 @@ import {
   CatmullRomCurve3,
   Line,
   LineBasicMaterial,
+  LineSegments,
   Mesh,
   Vector3,
 } from 'three';
@@ -12,43 +13,51 @@ import { gsap } from 'gsap';
 
 // Interfaces
 import Scene from './scenes/UMTBSceneInterface';
+// eslint-disable-next-line import/no-cycle
 import UTMBMap from './UTMBMap';
-
-interface AnimationStep {
-  trace: {
-    count: number;
-  };
-}
 
 class UTMBSceneManager {
   private scenes: Array<Scene>;
   private lastScene: number | null = null;
-  private currentScene: number = 0;
+  private currentScene: number | null = null;
   private currentlySwitchingScenes: boolean = false;
   private map: UTMBMap;
   private trace: Line;
+  private cameraPath: CatmullRomCurve3;
+  private lineTemp;
   private lastYaw!: number;
-  private animationState: AnimationStep = {
-    trace: {
-      count: 0,
-    },
+  private animationState: { count: number } = {
+    count: 0,
   };
 
-  constructor(MapInstance: UTMBMap, scenes: Array<Scene>) {
+  constructor(MapInstance: UTMBMap, trace: Mesh, camera: LineSegments, scenes: Array<Scene>) {
     this.map = MapInstance;
     this.scenes = scenes;
 
-    const line = this.buildCurveFromTrace(this.map.tempTrace);
+    const { line } = UTMBSceneManager.buildCurveFromTrace(trace);
     this.trace = line;
     this.trace.geometry.setDrawRange(0, 0);
 
+    const { curve, line: lineTemp } = UTMBSceneManager.buildCurveFromTrace(camera, true);
+    this.cameraPath = curve;
+    this.lineTemp = lineTemp;
+    // this.lineTemp.geometry.setDrawRange(0, 0);
+
+    this.map.camera.position.copy(this.cameraPath.getPointAt(0));
+    this.map.camera.lookAt(this.map.character.position);
     this.map.scene.add(this.trace);
+    // this.map.scene.add(this.lineTemp);
 
     this.events();
-    this.processStep();
   }
 
-  buildCurveFromTrace(traceMesh: Mesh): Line {
+  static buildCurveFromTrace(
+    traceMesh: Mesh | LineSegments,
+    reverse: boolean = false,
+  ): {
+    curve: CatmullRomCurve3;
+    line: Line;
+  } {
     let geometry = traceMesh.geometry as BufferGeometry;
 
     // Convert to non-indexed if necessary
@@ -61,10 +70,14 @@ class UTMBSceneManager {
     const points: Vector3[] = [];
 
     const temp = new Vector3();
-    for (let i = 0; i < posAttr.count; i++) {
+    for (let i = 0; i < posAttr.count; i += 1) {
       temp.fromBufferAttribute(posAttr, i);
       traceMesh.localToWorld(temp); // apply mesh transform
       points.push(temp.clone());
+    }
+
+    if (reverse) {
+      points.reverse();
     }
 
     // Build CatmullRomCurve3
@@ -77,7 +90,7 @@ class UTMBSceneManager {
     const line = new Line(curveGeometry, curveMaterial);
 
     // Return both so you can add the line to the scene and store the curve for animation
-    return line;
+    return { curve, line };
   }
 
   events(): void {
@@ -88,7 +101,7 @@ class UTMBSceneManager {
     btnBack?.addEventListener('click', (e) => {
       e.preventDefault();
 
-      if (this.currentScene) {
+      if (this.currentScene !== null) {
         this.currentScene -= 1;
 
         if (!this.currentScene) {
@@ -105,7 +118,12 @@ class UTMBSceneManager {
     btnNext?.addEventListener('click', (e) => {
       e.preventDefault();
 
-      if (this.currentScene <= this.scenes.length - 1) {
+      if (this.currentScene === null) {
+        this.currentScene = 0;
+        btnBack?.removeAttribute('disabled');
+
+        this.processStep();
+      } else if (this.currentScene <= this.scenes.length - 1) {
         this.currentScene += 1;
 
         if (this.currentScene === this.scenes.length - 1) {
@@ -121,31 +139,42 @@ class UTMBSceneManager {
   }
 
   processStep(): void {
+    if (this.currentScene === null) {
+      this.currentScene = 0;
+    }
+
     if (!this.scenes[this.currentScene]) return;
 
     if (this.lastScene !== null && this.scenes[this.lastScene]) {
       this.scenes[this.lastScene].onExit();
     }
-
-    const total: number = this.trace.geometry.index
+    const totalTrace: number = this.trace.geometry.index
       ? this.trace.geometry.index.count
       : this.trace.geometry.attributes.position.count;
-    const totalOfScene: number = Math.floor(
-      total * (this.scenes[this.currentScene].pathPosition * 0.01),
-    );
+    const totalPath: number = this.lineTemp.geometry.index
+      ? this.lineTemp.geometry.index.count
+      : this.lineTemp.geometry.attributes.position.count;
 
-    gsap.to(this.animationState.trace, {
-      count: totalOfScene,
+    gsap.to(this.animationState, {
+      count: this.scenes[this.currentScene].pathPosition,
       duration: 1,
       ease: 'sine.inOut',
       onUpdate: () => {
-        const { count } = this.animationState.trace;
-        this.trace.geometry.setDrawRange(0, count);
+        const { count } = this.animationState;
+        const percentOfPOath: number = Math.floor(totalPath * (count * 0.01));
+        // Animation de la caméra
+        this.lineTemp.geometry.setDrawRange(0, percentOfPOath);
+        this.map.camera.position.copy(this.cameraPath.getPointAt(count / 100));
+        this.map.camera.lookAt(this.map.character.position);
+
+        // Animation du tracé
+        const percentOfTrace: number = Math.floor(totalTrace * (count * 0.01));
+        this.trace.geometry.setDrawRange(0, percentOfTrace);
 
         const posAttr = (this.trace.geometry as BufferGeometry).attributes
           .position as BufferAttribute;
-        const vertexIndex = Math.max(Math.floor(count) - 1, 0);
-        const frac = count - Math.floor(count);
+        const vertexIndex = Math.max(Math.floor(percentOfTrace) - 1, 0);
+        const frac = percentOfTrace - Math.floor(percentOfTrace);
 
         const v1 = new Vector3().fromBufferAttribute(posAttr, vertexIndex);
         const v2 = new Vector3().fromBufferAttribute(
@@ -176,9 +205,7 @@ class UTMBSceneManager {
           if (delta < -Math.PI) delta += 2 * Math.PI;
 
           // --- Check if this is the final segment ---
-          const isLastSegment = vertexIndex >= totalOfScene - 1;
-
-          console.log(isLastSegment);
+          const isLastSegment = vertexIndex >= totalTrace - 1;
 
           // --- Apply threshold only if NOT last segment ---
           const threshold = 2.5;
@@ -189,7 +216,7 @@ class UTMBSceneManager {
         }
       },
       onComplete: () => {
-        this.scenes[this.currentScene].onEnter();
+        this.scenes[this.currentScene ?? 0].onEnter();
       },
     });
   }
