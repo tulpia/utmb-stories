@@ -3,13 +3,11 @@ import {
   Color,
   ColorRepresentation,
   DirectionalLight,
-  LineSegments,
   Mesh,
   PerspectiveCamera,
   Scene,
   WebGLRenderer,
 } from 'three';
-import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import GUI from 'lil-gui';
 
 // Classes
@@ -26,7 +24,6 @@ class UTMBMap {
   scene: Scene;
   camera: PerspectiveCamera;
   renderer: WebGLRenderer;
-  controls!: OrbitControls;
   light!: DirectionalLight;
 
   // Custom stuff
@@ -44,7 +41,6 @@ class UTMBMap {
 
     this.addLights();
     this.render();
-    this.addControls();
 
     const loader = new UTMBLoader();
     loader.loadModels().then(([mapObject, traceObject, characterObject, mapPathObject]) => {
@@ -67,10 +63,6 @@ class UTMBMap {
         new SceneTest4(),
       ]);
     });
-  }
-
-  addControls(): void {
-    this.controls = new OrbitControls(this.camera, this.renderer.domElement);
   }
 
   addLights(): void {

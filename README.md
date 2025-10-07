@@ -2,7 +2,7 @@
 
 ## TODO
 
-### Day 1 - Prototypage du fonctionnement
+### Etape 1 - Prototypage du fonctionnement
 
 - [x] Afficher la map
 - [x] Faire un loader
@@ -11,11 +11,23 @@
 - [x] Faire le sceneManager
 - [x] Faire des tests de scènes
 
-### Day 2 - Gestion de la caméra et des scènes
+### Etape 2 - Gestion de la caméra et des scènes
 
 - [x] Convertir les coordonées en pourcentage de complétion du tracé
 - [x] Ajouter l'objet sur le bout du tracé
 - [x] Le faire bouger en même temps que le tracé
 - [x] Faire un trace pour le parcours de la camera et l'importer
-- [ ] Faire le move au scroll
-- [ ] Le faire de manière smooth (lerp)
+- [x] Faire le move au scroll
+- [x] Le faire de manière smooth (lerp)
+
+### Etape 3 - Cycle jour/nuit
+
+- [ ] Ajouter une lumière sur le personnage, l'éteindre pour l'instant
+- [ ] Creer un path sur blender qui sera l'axe pour bouger la camera
+- [ ] Faire bouger la directional light sur l'axe par rapport au pourcentage de scroll
+- [ ] Allumer la lumière sur le personnage
+
+### Chores
+
+- [ ] Creer une classe pour chaque objet et gerer ses dependences dans ces objets
+- [ ] Proprifier

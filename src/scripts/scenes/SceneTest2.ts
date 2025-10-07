@@ -2,8 +2,10 @@
 import UMTBSceneInterface from './UMTBSceneInterface';
 
 class SceneTest2 implements UMTBSceneInterface {
-  pathPosition: number = 30;
-  cameraPosition: number = 1567;
+  public range = {
+    start: 20,
+    end: 30,
+  };
 
   onEnter(): void {
     console.log('pipi');
