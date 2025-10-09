@@ -9,10 +9,11 @@ import {
   Mesh,
   Vector3,
 } from 'three';
-import { gsap } from 'gsap';
 
 // Interfaces
 import Scene from './scenes/UMTBSceneInterface';
+
+// Classes
 // eslint-disable-next-line import/no-cycle
 import UTMBMap from './UTMBMap';
 import UTMBScroller from './UTMBScroller';
@@ -36,9 +37,8 @@ class UTMBSceneManager {
     this.trace = line;
     this.trace.geometry.setDrawRange(0, 0);
 
-    const { curve, line: lineTemp } = UTMBSceneManager.buildCurveFromTrace(camera, true);
+    const { curve } = UTMBSceneManager.buildCurveFromTrace(camera, true);
     this.cameraPath = curve;
-    this.lineTemp = lineTemp;
 
     this.scroller = new UTMBScroller(this.map.renderer.domElement, this.scenes);
     this.update = this.update.bind(this);

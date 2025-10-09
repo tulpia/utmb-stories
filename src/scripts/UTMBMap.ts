@@ -3,7 +3,10 @@ import {
   Color,
   ColorRepresentation,
   DirectionalLight,
+  LineSegments,
   Mesh,
+  Object3D,
+  Object3DEventMap,
   PerspectiveCamera,
   Scene,
   WebGLRenderer,
@@ -30,7 +33,7 @@ class UTMBMap {
   sceneManager!: UTMBSceneManager;
 
   // Objects
-  character!: Mesh;
+  character!: Object3D<Object3DEventMap>;
 
   constructor() {
     this.scene = new Scene();
@@ -39,30 +42,31 @@ class UTMBMap {
     this.camera.position.set(5, 10, 5);
     this.renderer = new WebGLRenderer();
 
-    this.addLights();
     this.render();
 
     const loader = new UTMBLoader();
-    loader.loadModels().then(([mapObject, traceObject, characterObject, mapPathObject]) => {
-      const [trace] = traceObject.children;
-      const [mapPath] = mapPathObject.children;
-      const [character] = characterObject.children;
+    loader
+      .loadModels(this.renderer)
+      .then(([mapObject, traceObject, characterObject, mapPathObject, hdrEnv]) => {
+        const trace = traceObject.children[0] as Mesh;
+        const mapPath = mapPathObject.children[0] as LineSegments;
+        const character = characterObject.children[0] as Mesh;
 
-      this.character = character;
-      this.character.scale.set(1.5, 1.5, 1.5);
+        this.character = character;
+        this.character.scale.set(1.5, 1.5, 1.5);
 
-      this.light.target = mapObject;
-      this.camera.lookAt(mapObject.position);
-      this.scene.add(this.character);
-      this.scene.add(mapObject);
+        this.camera.lookAt(mapObject.position);
+        this.scene.add(this.character);
+        this.scene.add(mapObject);
+        this.scene.environment = hdrEnv;
 
-      this.sceneManager = new UTMBSceneManager(this, trace, mapPath, [
-        new SceneTest1(),
-        new SceneTest2(),
-        new SceneTest3(),
-        new SceneTest4(),
-      ]);
-    });
+        this.sceneManager = new UTMBSceneManager(this, trace, mapPath, [
+          new SceneTest1(),
+          new SceneTest2(),
+          new SceneTest3(),
+          new SceneTest4(),
+        ]);
+      });
   }
 
   addLights(): void {
@@ -101,9 +105,13 @@ class UTMBMap {
     this.renderer.setSize(window.innerWidth, window.innerHeight);
     document.body.appendChild(this.renderer.domElement);
 
-    this.renderer.setAnimationLoop(() => {
-      this.renderer.render(this.scene, this.camera);
-    });
+    this.renderLoop = this.renderLoop.bind(this);
+    this.renderLoop();
+  }
+
+  renderLoop(): void {
+    requestAnimationFrame(this.renderLoop);
+    this.renderer.render(this.scene, this.camera);
   }
 }
 

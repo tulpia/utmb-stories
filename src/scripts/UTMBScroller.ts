@@ -102,7 +102,7 @@ class UTMBScroller {
     this.isDragging = false;
   }
 
-  private onProgressBarClick(e: PointerEvent): void {
+  private onProgressBarClick(e: MouseEvent): void {
     if (this.progressBarClick) {
       const rect: DOMRect = this.progressBarClick.getBoundingClientRect();
       const percentageClicked: number = ((e.clientX - rect.left) / rect.width) * 100;
