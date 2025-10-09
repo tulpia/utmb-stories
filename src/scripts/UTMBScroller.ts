@@ -10,9 +10,12 @@ class UTMBScroller {
   public scenesThresholds: Array<SceneThreshold>;
   public fakeScroll: number = 0; // exposed for main class
   public scrollVelocity: number = 0;
-
+  public targetScroll: number | null = 0;
   private canvas: HTMLCanvasElement;
+  private progressBar: HTMLElement | null;
+  private progressBarClick: HTMLElement | null;
   private smoothing: number;
+  private targetScrollSmoothing: number;
   private friction: number;
 
   private isDragging: boolean = false;
@@ -28,8 +31,11 @@ class UTMBScroller {
     } = {},
   ) {
     this.canvas = canvas;
-    this.smoothing = options.smoothing ?? 0.1;
-    this.friction = options.friction ?? 0.9;
+    this.progressBar = document.querySelector('.js-navigation-progress');
+    this.progressBarClick = document.querySelector('.js-navigation-goto');
+    this.smoothing = options.smoothing ?? 0.06;
+    this.targetScrollSmoothing = options.smoothing ?? 0.02;
+    this.friction = options.friction ?? 0.95;
 
     // Calculation des valeurs de base
     // @todo : Relancer au resize de la fenêtre
@@ -41,9 +47,11 @@ class UTMBScroller {
     this.onPointerDown = this.onPointerDown.bind(this);
     this.onPointerMove = this.onPointerMove.bind(this);
     this.onPointerUp = this.onPointerUp.bind(this);
+    this.onProgressBarClick = this.onProgressBarClick.bind(this);
     this.animate = this.animate.bind(this);
 
     // Event listeners
+    this.progressBarClick!.addEventListener('click', this.onProgressBarClick);
     this.canvas.addEventListener('wheel', this.onWheel, { passive: false });
     this.canvas.addEventListener('pointerdown', this.onPointerDown);
     window.addEventListener('pointermove', this.onPointerMove);
@@ -94,6 +102,15 @@ class UTMBScroller {
     this.isDragging = false;
   }
 
+  private onProgressBarClick(e: PointerEvent): void {
+    if (this.progressBarClick) {
+      const rect: DOMRect = this.progressBarClick.getBoundingClientRect();
+      const percentageClicked: number = ((e.clientX - rect.left) / rect.width) * 100;
+
+      this.targetScroll = (percentageClicked / 100) * this.fakeMaxHeight;
+    }
+  }
+
   private animate() {
     requestAnimationFrame(this.animate);
 
@@ -105,6 +122,12 @@ class UTMBScroller {
     const frictionFactor = this.friction ** (deltaTime * 60);
     this.scrollVelocity *= frictionFactor;
 
+    let desiredScroll: number = this.fakeScroll + this.scrollVelocity * deltaTime;
+
+    if (this.targetScroll !== null) {
+      desiredScroll = this.targetScroll;
+    }
+
     // Smooth velocity using lerp towards accumulated delta (optional)
     // If you have a rawVelocity coming from wheel/drag each frame, you can lerp toward it
     // For example, we can store rawWheelDelta separately and lerp velocity:
@@ -113,9 +136,21 @@ class UTMBScroller {
     // For simplicity, you can smooth scroll integration itself:
     this.fakeScroll = lerp(
       this.fakeScroll,
-      this.fakeScroll + this.scrollVelocity * deltaTime,
-      this.smoothing,
+      desiredScroll,
+      this.targetScroll ? this.targetScrollSmoothing : this.smoothing,
     );
+
+    // Stop animation if targetScroll is reached
+    if (this.targetScroll !== null && Math.abs(this.fakeScroll - this.targetScroll) < 0.5) {
+      this.fakeScroll = this.targetScroll;
+      this.targetScroll = null;
+    }
+
+    this.animateProgressBar();
+  }
+
+  private animateProgressBar(): void {
+    this.progressBar!.style.clipPath = `inset(0 ${100 - this.getScrollPercent()}% 0 0)`;
   }
 
   public getScrollPercent(): number {

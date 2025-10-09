@@ -1,17 +1,33 @@
-.btns {
+.navigation {
   position: fixed;
   bottom: 50px;
   left: 50%;
   transform: translateX(-50%);
+  z-index: 2;
 
-  button {
+  &__trace {
     background: white;
-    border: 1px solid grey;
-    border-radius: 5px;
-    padding: 20px;
+    box-sizing: border-box;
+    padding: 23px 30px;
+    border-radius: 15px;
+    position: relative;
+    display: flex;
+    justify-content: center;
+    align-items: center;
 
-    &:disabled {
-      opacity: 0.5;
+    img {
+      width: 360px;
+      opacity: 0.3;
+
+      &.js-navigation-progress {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        clip-path: inset(0 0 0 100%);
+        opacity: 1;
+        pointer-events: none;
+      }
     }
   }
 }

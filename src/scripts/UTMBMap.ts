@@ -49,7 +49,7 @@ class UTMBMap {
       const [character] = characterObject.children;
 
       this.character = character;
-      this.character.scale.set(4, 4, 4);
+      this.character.scale.set(1.5, 1.5, 1.5);
 
       this.light.target = mapObject;
       this.camera.lookAt(mapObject.position);

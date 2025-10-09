@@ -19,6 +19,7 @@
 - [x] Faire un trace pour le parcours de la camera et l'importer
 - [x] Faire le move au scroll
 - [x] Le faire de manière smooth (lerp)
+- [x] Ajouter la progress bar du trace
 
 ### Etape 3 - Cycle jour/nuit
 
