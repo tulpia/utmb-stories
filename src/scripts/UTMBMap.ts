@@ -5,12 +5,19 @@ import {
   DirectionalLight,
   LineSegments,
   Mesh,
-  Object3D,
-  Object3DEventMap,
   PerspectiveCamera,
   Scene,
+  Vector3,
   WebGLRenderer,
+  WebGLRenderTarget,
 } from 'three';
+import {
+  BokehPass,
+  EffectComposer,
+  OutputPass,
+  RenderPass,
+  SMAAPass,
+} from 'three/examples/jsm/Addons.js';
 import GUI from 'lil-gui';
 
 // Classes
@@ -28,12 +35,14 @@ class UTMBMap {
   camera: PerspectiveCamera;
   renderer: WebGLRenderer;
   light!: DirectionalLight;
+  composer!: EffectComposer;
+  bokehPass!: BokehPass;
 
   // Custom stuff
   sceneManager!: UTMBSceneManager;
 
   // Objects
-  character!: Object3D<Object3DEventMap>;
+  character!: Mesh;
 
   constructor() {
     this.scene = new Scene();
@@ -42,6 +51,7 @@ class UTMBMap {
     this.camera.position.set(5, 10, 5);
     this.renderer = new WebGLRenderer();
 
+    this.addPostProcessing();
     this.render();
 
     const loader = new UTMBLoader();
@@ -54,6 +64,7 @@ class UTMBMap {
 
         this.character = character;
         this.character.scale.set(1.5, 1.5, 1.5);
+        this.character.material.color.setHex(0xd70a2c);
 
         this.camera.lookAt(mapObject.position);
         this.scene.add(this.character);
@@ -67,6 +78,33 @@ class UTMBMap {
           new SceneTest4(),
         ]);
       });
+  }
+
+  addPostProcessing(): void {
+    // Anti-Aliasing
+    const w: number = window.innerWidth;
+    const h: number = window.innerHeight;
+    const rt: WebGLRenderTarget = new WebGLRenderTarget(w, h, { samples: 4 });
+    const smaaPass: SMAAPass = new SMAAPass(window.innerWidth, window.innerHeight);
+
+    // DoF
+    const DPR: number = Math.min(window.devicePixelRatio, 2);
+    this.renderer.setPixelRatio(DPR);
+    this.renderer.setSize(window.innerWidth, window.innerHeight);
+
+    const renderPass: RenderPass = new RenderPass(this.scene, this.camera);
+    this.bokehPass = new BokehPass(this.scene, this.camera, {
+      focus: 15,
+      aperture: 0.01,
+      maxblur: 0.1,
+    });
+    const outputPass: OutputPass = new OutputPass();
+
+    this.composer = new EffectComposer(this.renderer, rt);
+    this.composer.addPass(renderPass);
+    this.composer.addPass(this.bokehPass);
+    this.composer.addPass(outputPass);
+    this.composer.addPass(smaaPass);
   }
 
   addLights(): void {
@@ -111,7 +149,14 @@ class UTMBMap {
 
   renderLoop(): void {
     requestAnimationFrame(this.renderLoop);
-    this.renderer.render(this.scene, this.camera);
+
+    if (this.character) {
+      const tmp = new Vector3();
+      this.character.getWorldPosition(tmp);
+
+      this.bokehPass.uniforms.focus.value = tmp.distanceTo(this.camera.position);
+    }
+    this.composer.render();
   }
 }
 

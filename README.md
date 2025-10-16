@@ -20,6 +20,7 @@
 - [x] Faire le move au scroll
 - [x] Le faire de manière smooth (lerp)
 - [x] Ajouter la progress bar du trace
+- [ ] Ajouter le second tracé pour faire bouger le personnage dessus
 
 ### Etape 3 - Cycle jour/nuit
 
@@ -32,3 +33,4 @@
 
 - [ ] Creer une classe pour chaque objet et gerer ses dependences dans ces objets
 - [ ] Proprifier
+- [x] Ajouter le post-process
