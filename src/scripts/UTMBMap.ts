@@ -10,6 +10,8 @@ import {
   Vector3,
   WebGLRenderer,
   WebGLRenderTarget,
+  Clock,
+  MeshPhysicalMaterial,
 } from 'three';
 import {
   BokehPass,
@@ -18,6 +20,7 @@ import {
   RenderPass,
   SMAAPass,
 } from 'three/examples/jsm/Addons.js';
+import CameraControls from 'camera-controls';
 import GUI from 'lil-gui';
 
 // Classes
@@ -32,11 +35,13 @@ import SceneTest4 from './scenes/SceneTest4';
 class UTMBMap {
   // Essentials
   scene: Scene;
-  camera: PerspectiveCamera;
+  camera: CameraControls;
+  realCamera: PerspectiveCamera;
   renderer: WebGLRenderer;
   light!: DirectionalLight;
   composer!: EffectComposer;
   bokehPass!: BokehPass;
+  clock: Clock;
 
   // Custom stuff
   sceneManager!: UTMBSceneManager;
@@ -47,10 +52,10 @@ class UTMBMap {
   constructor() {
     this.scene = new Scene();
     this.scene.background = new Color(255, 255, 255);
-    this.camera = new PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 1000);
-    this.camera.position.set(5, 10, 5);
+    this.realCamera = new PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 1000);
     this.renderer = new WebGLRenderer();
-
+    this.camera = new CameraControls(this.realCamera, this.renderer.domElement);
+    this.clock = new Clock();
     this.addPostProcessing();
     this.render();
 
@@ -63,10 +68,17 @@ class UTMBMap {
         const character = characterObject.children[0] as Mesh;
 
         this.character = character;
-        this.character.scale.set(1.5, 1.5, 1.5);
-        this.character.material.color.setHex(0xd70a2c);
+        this.character.scale.set(2, 2, 2);
+        this.character.material = new MeshPhysicalMaterial({
+          color: 0xd70a2c,
+          roughness: 0.3,
+          metalness: 0.0,
+          clearcoat: 0.4,
+          clearcoatRoughness: 0.15,
+          envMapIntensity: 0.6,
+        });
 
-        this.camera.lookAt(mapObject.position);
+        this.camera.setTarget(mapObject.position.x, mapObject.position.y, mapObject.position.z);
         this.scene.add(this.character);
         this.scene.add(mapObject);
         this.scene.environment = hdrEnv;
@@ -92,8 +104,8 @@ class UTMBMap {
     this.renderer.setPixelRatio(DPR);
     this.renderer.setSize(window.innerWidth, window.innerHeight);
 
-    const renderPass: RenderPass = new RenderPass(this.scene, this.camera);
-    this.bokehPass = new BokehPass(this.scene, this.camera, {
+    const renderPass: RenderPass = new RenderPass(this.scene, this.realCamera);
+    this.bokehPass = new BokehPass(this.scene, this.realCamera, {
       focus: 15,
       aperture: 0.01,
       maxblur: 0.1,
@@ -132,11 +144,6 @@ class UTMBMap {
     lightFolder.addColor(obj, 'color').onChange((value: ColorRepresentation) => {
       this.light.color.set(value);
     });
-
-    const cameraFolder: GUI = gui.addFolder('Camera');
-    cameraFolder.add(this.camera.position, 'x', -100, 100, 0.1);
-    cameraFolder.add(this.camera.position, 'y', -100, 100, 0.1);
-    cameraFolder.add(this.camera.position, 'z', -100, 100, 0.1);
   }
 
   render(): void {
@@ -149,12 +156,16 @@ class UTMBMap {
 
   renderLoop(): void {
     requestAnimationFrame(this.renderLoop);
+    const delta: number = this.clock.getDelta();
+    this.camera.update(delta);
 
     if (this.character) {
       const tmp = new Vector3();
-      this.character.getWorldPosition(tmp);
+      const tmpCamera = new Vector3();
+      const position = this.camera.getPosition(tmpCamera);
 
-      this.bokehPass.uniforms.focus.value = tmp.distanceTo(this.camera.position);
+      this.character.getWorldPosition(tmp);
+      this.bokehPass.uniforms.focus.value = tmp.distanceTo(position);
     }
     this.composer.render();
   }

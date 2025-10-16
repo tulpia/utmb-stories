@@ -57,7 +57,6 @@ class UTMBScroller {
     window.addEventListener('pointermove', this.onPointerMove);
     window.addEventListener('pointerup', this.onPointerUp);
 
-    // Start loop
     requestAnimationFrame(this.animate);
   }
 

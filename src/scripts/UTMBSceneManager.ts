@@ -44,8 +44,6 @@ class UTMBSceneManager {
     this.update = this.update.bind(this);
     requestAnimationFrame(this.update);
 
-    // this.map.camera.position.copy(this.cameraPath.getPointAt(0));
-    // this.map.camera.lookAt(this.map.character.position);
     this.map.scene.add(this.trace);
   }
 
@@ -116,7 +114,7 @@ class UTMBSceneManager {
       const isLastSegment = vertexIndex >= totalTrace - 1;
 
       // --- Apply threshold only if NOT last segment ---
-      const threshold = 2.5;
+      const threshold = 5;
       if (isLastSegment || Math.abs(delta) > threshold) {
         this.map.character.rotation.y = currentYaw;
         this.lastYaw = currentYaw;
@@ -126,8 +124,17 @@ class UTMBSceneManager {
 
   private followCamera(scroll: number): void {
     // Animation de la caméra
-    this.map.camera.position.copy(this.cameraPath.getPointAt(scroll / 100));
-    this.map.camera.lookAt(this.map.character.position);
+    const position: Vector3 = this.cameraPath.getPointAt(scroll / 100);
+
+    this.map.camera.setLookAt(
+      position.x,
+      position.y,
+      position.z,
+      this.map.character.position.x,
+      this.map.character.position.y,
+      this.map.character.position.z,
+      true,
+    );
   }
 
   static buildCurveFromTrace(

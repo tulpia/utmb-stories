@@ -24,6 +24,7 @@
     "vite": "^6.2.0"
   },
   "dependencies": {
+    "camera-controls": "^3.1.0",
     "gsap": "^3.13.0",
     "lerp": "^1.0.3",
     "lil-gui": "^0.20.0",
