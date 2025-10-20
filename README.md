@@ -24,13 +24,21 @@
 
 ### Etape 3 - Cycle jour/nuit
 
-- [ ] Ajouter une lumière sur le personnage, l'éteindre pour l'instant
-- [ ] Creer un path sur blender qui sera l'axe pour bouger la camera
-- [ ] Faire bouger la directional light sur l'axe par rapport au pourcentage de scroll
-- [ ] Allumer la lumière sur le personnage
+- [x] Ajouter une lumière sur le personnage, l'éteindre pour l'instant
+- [x] Allumer la lumière sur le personnage
+
+### Etape 4 - Animations
+
+- [ ] Voir pour rajouter des animations a chaque scene (textuelles ET objets 3D)
+- [ ] Faire le start screen (voir avec jo)
+
+### Etape 5 - Contenus
+
+- [ ] Ajouter les differentes scenes
+
+### Etape 6 - Post Processing
 
 ### Chores
 
 - [ ] Creer une classe pour chaque objet et gerer ses dependences dans ces objets
 - [ ] Proprifier
-- [x] Ajouter le post-process

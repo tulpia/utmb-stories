@@ -3,6 +3,7 @@ import {
   BufferAttribute,
   BufferGeometry,
   CatmullRomCurve3,
+  Color,
   Line,
   LineBasicMaterial,
   LineSegments,
@@ -42,13 +43,12 @@ class UTMBSceneManager {
 
     this.scroller = new UTMBScroller(this.map.renderer.domElement, this.scenes);
     this.update = this.update.bind(this);
-    requestAnimationFrame(this.update);
 
     this.map.scene.add(this.trace);
   }
 
-  private update() {
-    requestAnimationFrame(this.update);
+  public update() {
+    this.scroller.update();
 
     // Access fakeScroll from handler
     const scroll = this.scroller.getScrollPercent();
@@ -58,6 +58,7 @@ class UTMBSceneManager {
 
     this.drawTrace(scroll);
     this.followCamera(scroll);
+    this.animateLights(scroll);
 
     if (correspondingScene && this.currentActiveScene !== correspondingScene) {
       if (this.lastActiveScene) {
@@ -92,7 +93,7 @@ class UTMBSceneManager {
     this.trace.localToWorld(v2);
 
     v1.lerp(v2, frac);
-    this.map.character.position.copy(v1);
+    this.map.character.group.position.copy(v1);
 
     // --- Compute yaw ---
     const direction = v2.clone().sub(v1);
@@ -116,7 +117,7 @@ class UTMBSceneManager {
       // --- Apply threshold only if NOT last segment ---
       const threshold = 5;
       if (isLastSegment || Math.abs(delta) > threshold) {
-        this.map.character.rotation.y = currentYaw;
+        this.map.character.group.rotation.y = currentYaw;
         this.lastYaw = currentYaw;
       }
     }
@@ -130,11 +131,26 @@ class UTMBSceneManager {
       position.x,
       position.y,
       position.z,
-      this.map.character.position.x,
-      this.map.character.position.y,
-      this.map.character.position.z,
+      this.map.character.group.position.x,
+      this.map.character.group.position.y,
+      this.map.character.group.position.z,
       true,
     );
+  }
+
+  /**
+   * Cycle jour/nuit
+   * @param scroll
+   */
+  private animateLights(scroll: number): void {
+    this.map.character.setLightIntensity(scroll);
+
+    const factor: number = 1 - 1.2 * Math.exp(-((scroll - 50) ** 2) / (2 * 20 * 20));
+    this.map.scene.environmentIntensity = factor;
+    const nightColor: Color = new Color(0x000000); // black
+    const dayColor: Color = new Color(0xffffff); // white
+
+    this.map.scene.background = nightColor.clone().lerp(dayColor, factor);
   }
 
   static buildCurveFromTrace(

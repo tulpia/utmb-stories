@@ -48,7 +48,7 @@ class UTMBScroller {
     this.onPointerMove = this.onPointerMove.bind(this);
     this.onPointerUp = this.onPointerUp.bind(this);
     this.onProgressBarClick = this.onProgressBarClick.bind(this);
-    this.animate = this.animate.bind(this);
+    this.update = this.update.bind(this);
 
     // Event listeners
     this.progressBarClick!.addEventListener('click', this.onProgressBarClick);
@@ -56,8 +56,6 @@ class UTMBScroller {
     this.canvas.addEventListener('pointerdown', this.onPointerDown);
     window.addEventListener('pointermove', this.onPointerMove);
     window.addEventListener('pointerup', this.onPointerUp);
-
-    requestAnimationFrame(this.animate);
   }
 
   private static calculateFakeMaxHeight(): number {
@@ -110,9 +108,7 @@ class UTMBScroller {
     }
   }
 
-  private animate() {
-    requestAnimationFrame(this.animate);
-
+  public update(): void {
     const now = performance.now();
     const deltaTime = (now - this.prevFrameTime) / 1000;
     this.prevFrameTime = now;

@@ -11,7 +11,6 @@ import {
   WebGLRenderer,
   WebGLRenderTarget,
   Clock,
-  MeshPhysicalMaterial,
 } from 'three';
 import {
   BokehPass,
@@ -27,10 +26,15 @@ import GUI from 'lil-gui';
 import UTMBLoader from './UTMBLoader';
 // eslint-disable-next-line import/no-cycle
 import UTMBSceneManager from './UTMBSceneManager';
+
+// Scenes
 import SceneTest1 from './scenes/SceneTest1';
 import SceneTest2 from './scenes/SceneTest2';
 import SceneTest3 from './scenes/SceneTest3';
 import SceneTest4 from './scenes/SceneTest4';
+
+// Models
+import Character from './models/Character';
 
 class UTMBMap {
   // Essentials
@@ -39,15 +43,15 @@ class UTMBMap {
   realCamera: PerspectiveCamera;
   renderer: WebGLRenderer;
   light!: DirectionalLight;
+
+  // Post Processing
   composer!: EffectComposer;
   bokehPass!: BokehPass;
   clock: Clock;
-
-  // Custom stuff
   sceneManager!: UTMBSceneManager;
 
   // Objects
-  character!: Mesh;
+  character!: Character;
 
   constructor() {
     this.scene = new Scene();
@@ -57,7 +61,6 @@ class UTMBMap {
     this.camera = new CameraControls(this.realCamera, this.renderer.domElement);
     this.clock = new Clock();
     this.addPostProcessing();
-    this.render();
 
     const loader = new UTMBLoader();
     loader
@@ -65,21 +68,10 @@ class UTMBMap {
       .then(([mapObject, traceObject, characterObject, mapPathObject, hdrEnv]) => {
         const trace = traceObject.children[0] as Mesh;
         const mapPath = mapPathObject.children[0] as LineSegments;
-        const character = characterObject.children[0] as Mesh;
-
-        this.character = character;
-        this.character.scale.set(2, 2, 2);
-        this.character.material = new MeshPhysicalMaterial({
-          color: 0xd70a2c,
-          roughness: 0.3,
-          metalness: 0.0,
-          clearcoat: 0.4,
-          clearcoatRoughness: 0.15,
-          envMapIntensity: 0.6,
-        });
+        this.character = new Character(characterObject);
 
         this.camera.setTarget(mapObject.position.x, mapObject.position.y, mapObject.position.z);
-        this.scene.add(this.character);
+        this.scene.add(this.character.group);
         this.scene.add(mapObject);
         this.scene.environment = hdrEnv;
 
@@ -89,6 +81,8 @@ class UTMBMap {
           new SceneTest3(),
           new SceneTest4(),
         ]);
+
+        this.render();
       });
   }
 
@@ -120,7 +114,7 @@ class UTMBMap {
   }
 
   addLights(): void {
-    this.light = new DirectionalLight(0xffffff, 2);
+    this.light = new DirectionalLight(0xffffff, 1);
     this.scene.add(this.light);
   }
 
@@ -158,15 +152,15 @@ class UTMBMap {
     requestAnimationFrame(this.renderLoop);
     const delta: number = this.clock.getDelta();
     this.camera.update(delta);
+    this.sceneManager.update();
 
-    if (this.character) {
-      const tmp = new Vector3();
-      const tmpCamera = new Vector3();
-      const position = this.camera.getPosition(tmpCamera);
+    const tmp = new Vector3();
+    const tmpCamera = new Vector3();
+    const position = this.camera.getPosition(tmpCamera);
 
-      this.character.getWorldPosition(tmp);
-      this.bokehPass.uniforms.focus.value = tmp.distanceTo(position);
-    }
+    this.character.group.getWorldPosition(tmp);
+    this.bokehPass.uniforms.focus.value = tmp.distanceTo(position);
+
     this.composer.render();
   }
 }
