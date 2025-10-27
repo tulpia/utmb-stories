@@ -21,6 +21,7 @@
 - [x] Le faire de manière smooth (lerp)
 - [x] Ajouter la progress bar du trace
 - [ ] Ajouter le second tracé pour faire bouger le personnage dessus
+- [ ] Faire tourner le personnage vers la bonne direction
 
 ### Etape 3 - Cycle jour/nuit
 
@@ -40,5 +41,5 @@
 
 ### Chores
 
-- [ ] Creer une classe pour chaque objet et gerer ses dependences dans ces objets
-- [ ] Proprifier
+- [x] Creer une classe pour chaque objet et gerer ses dependences dans ces objets
+- [x] Proprifier
