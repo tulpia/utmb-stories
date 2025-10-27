@@ -1,5 +1,5 @@
 // Interfaces
-import UMTBSceneInterface from './UMTBSceneInterface';
+import UMTBSceneInterface from './interfaces/SceneInterface';
 
 class SceneTest2 implements UMTBSceneInterface {
   public range = {

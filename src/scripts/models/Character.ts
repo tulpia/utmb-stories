@@ -1,12 +1,17 @@
 // Utils
-import { Object3DEventMap, Group, Mesh, MeshPhysicalMaterial, PointLight, Light } from 'three';
+import { Object3DEventMap, Group, Mesh, MeshPhysicalMaterial, PointLight } from 'three';
 
-class Character {
+// Interfaces
+import Model from './Model';
+
+class Character extends Model {
   private character: Mesh;
   private light: PointLight;
   public group: Group;
 
   constructor(characterModel: Group<Object3DEventMap>) {
+    super();
+
     this.character = characterModel.children[0] as Mesh;
     this.light = new PointLight(0xffffff, 0, 100);
     this.group = new Group();
@@ -29,10 +34,14 @@ class Character {
     });
   }
 
-  public setLightIntensity(percentage: number) {
+  public setLightIntensity(percentage: number): void {
     const clampedNumber: number = 0.5 * Math.exp(-((percentage - 50) ** 2) / (2 * 10 * 10));
 
     this.light.intensity = clampedNumber;
+  }
+
+  update(scroll: number): void {
+    this.setLightIntensity(scroll);
   }
 }
 

@@ -1,13 +1,8 @@
 // Utils
 import { lerp } from 'three/src/math/MathUtils.js';
 
-// Interfaces
-import Scene from './scenes/UMTBSceneInterface';
-import SceneThreshold from './scenes/UTMBSceneThresholdInterface';
-
-class UTMBScroller {
+class Scroller {
   public fakeMaxHeight: number;
-  public scenesThresholds: Array<SceneThreshold>;
   public fakeScroll: number = 0; // exposed for main class
   public scrollVelocity: number = 0;
   public targetScroll: number | null = 0;
@@ -24,7 +19,6 @@ class UTMBScroller {
 
   constructor(
     canvas: HTMLCanvasElement,
-    scenes: Array<Scene>,
     options: {
       smoothing?: number;
       friction?: number;
@@ -39,8 +33,7 @@ class UTMBScroller {
 
     // Calculation des valeurs de base
     // @todo : Relancer au resize de la fenêtre
-    this.fakeMaxHeight = UTMBScroller.calculateFakeMaxHeight();
-    this.scenesThresholds = this.calculateScenesTresholds(scenes);
+    this.fakeMaxHeight = Scroller.calculateFakeMaxHeight();
 
     // Bind methods
     this.onWheel = this.onWheel.bind(this);
@@ -61,21 +54,6 @@ class UTMBScroller {
   private static calculateFakeMaxHeight(): number {
     // Nombre totalement arbitraire lol
     return window.innerHeight / 2;
-  }
-
-  private calculateScenesTresholds(scenes: Array<Scene>): Array<SceneThreshold> {
-    const finalScenes: Array<SceneThreshold> = [];
-
-    scenes.forEach((scene: Scene) => {
-      const threshHold: SceneThreshold = {
-        start: Math.floor(this.fakeMaxHeight * (scene.range.start * 0.01)),
-        end: Math.floor(this.fakeMaxHeight * (scene.range.end * 0.01)),
-      };
-
-      finalScenes.push(threshHold);
-    });
-
-    return finalScenes;
   }
 
   private onWheel(e: WheelEvent) {
@@ -153,4 +131,4 @@ class UTMBScroller {
   }
 }
 
-export default UTMBScroller;
+export default Scroller;

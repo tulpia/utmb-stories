@@ -1,3 +1,4 @@
+// Utils
 import {
   Group,
   LoadingManager,
@@ -8,7 +9,7 @@ import {
 } from 'three';
 import { EXRLoader, GLTFLoader } from 'three/examples/jsm/Addons.js';
 
-class UTMBLoader {
+class Loader {
   private loaderContainer: HTMLElement | null;
   private loaderProgressBar: HTMLElement | null;
   private manager: LoadingManager;
@@ -72,4 +73,4 @@ class UTMBLoader {
   }
 }
 
-export default UTMBLoader;
+export default Loader;

@@ -1,7 +1,6 @@
 // Utils
 import {
   Color,
-  ColorRepresentation,
   DirectionalLight,
   LineSegments,
   Mesh,
@@ -10,7 +9,6 @@ import {
   Vector3,
   WebGLRenderer,
   WebGLRenderTarget,
-  Clock,
 } from 'three';
 import {
   BokehPass,
@@ -19,13 +17,11 @@ import {
   RenderPass,
   SMAAPass,
 } from 'three/examples/jsm/Addons.js';
-import CameraControls from 'camera-controls';
-import GUI from 'lil-gui';
 
-// Classes
-import UTMBLoader from './UTMBLoader';
-// eslint-disable-next-line import/no-cycle
-import UTMBSceneManager from './UTMBSceneManager';
+// Utils - Classes
+import UTMBLoader from './utils/Loader';
+import Scroller from './utils/Scroller';
+import SceneManager from './scenes/SceneManager';
 
 // Scenes
 import SceneTest1 from './scenes/SceneTest1';
@@ -35,47 +31,60 @@ import SceneTest4 from './scenes/SceneTest4';
 
 // Models
 import Character from './models/Character';
+import Map from './models/Map';
+import Trace from './models/Trace';
+import Camera from './models/Camera';
 
-class UTMBMap {
+class UTMB {
   // Essentials
   scene: Scene;
-  camera: CameraControls;
   realCamera: PerspectiveCamera;
   renderer: WebGLRenderer;
   light!: DirectionalLight;
 
+  // Utils
+  scroller!: Scroller;
+  sceneManager!: SceneManager;
+
+  // Objects
+  map!: Map;
+  character!: Character;
+  trace!: Trace;
+  camera!: Camera;
+
   // Post Processing
   composer!: EffectComposer;
   bokehPass!: BokehPass;
-  clock: Clock;
-  sceneManager!: UTMBSceneManager;
-
-  // Objects
-  character!: Character;
 
   constructor() {
     this.scene = new Scene();
     this.scene.background = new Color(255, 255, 255);
     this.realCamera = new PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 1000);
     this.renderer = new WebGLRenderer();
-    this.camera = new CameraControls(this.realCamera, this.renderer.domElement);
-    this.clock = new Clock();
     this.addPostProcessing();
 
-    const loader = new UTMBLoader();
-    loader
+    new UTMBLoader()
       .loadModels(this.renderer)
       .then(([mapObject, traceObject, characterObject, mapPathObject, hdrEnv]) => {
-        const trace = traceObject.children[0] as Mesh;
-        const mapPath = mapPathObject.children[0] as LineSegments;
-        this.character = new Character(characterObject);
-
-        this.camera.setTarget(mapObject.position.x, mapObject.position.y, mapObject.position.z);
-        this.scene.add(this.character.group);
-        this.scene.add(mapObject);
+        // Ajout du HDRi
         this.scene.environment = hdrEnv;
 
-        this.sceneManager = new UTMBSceneManager(this, trace, mapPath, [
+        // Initialisation de tous les objets
+        const mapPath = mapPathObject.children[0] as LineSegments;
+        const trace = traceObject.children[0] as Mesh;
+        this.map = new Map(mapObject, this.scene);
+        this.character = new Character(characterObject);
+        this.trace = new Trace(trace, this.character);
+        this.camera = new Camera(this.realCamera, this.renderer, this.character);
+        this.camera.parseTrace(mapPath);
+
+        this.scene.add(this.character.group);
+        this.scene.add(this.map.map);
+        this.scene.add(this.trace.trace);
+
+        // Creation des utils
+        this.scroller = new Scroller(this.renderer.domElement);
+        this.sceneManager = new SceneManager([
           new SceneTest1(),
           new SceneTest2(),
           new SceneTest3(),
@@ -113,31 +122,15 @@ class UTMBMap {
     this.composer.addPass(smaaPass);
   }
 
-  addLights(): void {
-    this.light = new DirectionalLight(0xffffff, 1);
-    this.scene.add(this.light);
-  }
+  loopPostProcessing(): void {
+    const tmp = new Vector3();
+    const tmpCamera = new Vector3();
+    const position = this.camera.camera.getPosition(tmpCamera);
 
-  addDebug(): void {
-    const gui: GUI = new GUI();
-    const obj = {
-      background: this.scene.background,
-      color: this.light.color.getHex(),
-      zoom: this.camera.zoom,
-    };
+    this.character.group.getWorldPosition(tmp);
+    this.bokehPass.uniforms.focus.value = tmp.distanceTo(position);
 
-    gui.addColor(obj, 'background').onChange((value: ColorRepresentation) => {
-      this.scene.background = new Color(value);
-    });
-
-    const lightFolder: GUI = gui.addFolder('Light');
-    lightFolder.add(this.light.position, 'x', -10, 10, 0.1);
-    lightFolder.add(this.light.position, 'y', -10, 10, 0.1);
-    lightFolder.add(this.light.position, 'z', -10, 10, 0.1);
-    lightFolder.add(this.light, 'intensity', 0, 3, 0.01);
-    lightFolder.addColor(obj, 'color').onChange((value: ColorRepresentation) => {
-      this.light.color.set(value);
-    });
+    this.composer.render();
   }
 
   render(): void {
@@ -150,19 +143,17 @@ class UTMBMap {
 
   renderLoop(): void {
     requestAnimationFrame(this.renderLoop);
-    const delta: number = this.clock.getDelta();
-    this.camera.update(delta);
-    this.sceneManager.update();
+    this.scroller.update();
 
-    const tmp = new Vector3();
-    const tmpCamera = new Vector3();
-    const position = this.camera.getPosition(tmpCamera);
+    const scroll: number = this.scroller.getScrollPercent();
+    this.sceneManager.update(scroll);
+    this.camera.update(scroll);
+    this.trace.update(scroll);
+    this.character.update(scroll);
+    this.map.update(scroll);
 
-    this.character.group.getWorldPosition(tmp);
-    this.bokehPass.uniforms.focus.value = tmp.distanceTo(position);
-
-    this.composer.render();
+    this.loopPostProcessing();
   }
 }
 
-export default UTMBMap;
+export default UTMB;
