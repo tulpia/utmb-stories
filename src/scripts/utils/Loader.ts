@@ -52,11 +52,11 @@ class Loader {
       });
 
     const [map, trace, character, mapPath, hdrEnv] = await Promise.all([
-      loadGLTF('/models/carte.glb'),
-      loadGLTF('/models/trace.glb'),
-      loadGLTF('/models/character.glb'),
-      loadGLTF('/models/camerapath.glb'),
-      loadEXR('/textures/day.exr', webglrenderer),
+      loadGLTF(`${import.meta.env.BASE_URL}/models/carte.glb`),
+      loadGLTF(`${import.meta.env.BASE_URL}/models/trace.glb`),
+      loadGLTF(`${import.meta.env.BASE_URL}/models/character.glb`),
+      loadGLTF(`${import.meta.env.BASE_URL}/models/camerapath.glb`),
+      loadEXR(`${import.meta.env.BASE_URL}/textures/day.exr`, webglrenderer),
     ]);
 
     return [map, trace, character, mapPath, hdrEnv];
