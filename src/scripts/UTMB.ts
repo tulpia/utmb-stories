@@ -128,6 +128,7 @@ class UTMB {
     const position = this.camera.camera.getPosition(tmpCamera);
 
     this.character.group.getWorldPosition(tmp);
+    // @ts-ignore: Unreachable code error
     this.bokehPass.uniforms.focus.value = tmp.distanceTo(position);
 
     this.composer.render();
