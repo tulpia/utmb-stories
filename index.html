@@ -6,6 +6,23 @@
     <title>UTMB Stories</title>
   </head>
   <body>
+    <div class="loader js-loader">
+      <div class="loader__progress-bar">
+        <div class="loader__progress-bar --inner js-loader-progress-bar"></div>
+      </div>
+    </div>
+
+    <div class="navigation">
+      <div class="navigation__trace">
+        <img src="/svg/trace.svg" class="js-navigation-goto" alt="" />
+        <img
+          src="/svg/trace.svg"
+          class="navigation__trace--progress js-navigation-progress"
+          alt=""
+        />
+      </div>
+    </div>
+
     <script type="module" src="/src/main.ts"></script>
   </body>
 </html>

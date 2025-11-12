@@ -1,5 +1,9 @@
-import './style.css';
-import UTMBMap from './UTMBMap';
+import * as THREE from 'three';
+import './styles/main.scss';
+import CameraControls from 'camera-controls';
+import UTMB from './scripts/UTMB';
 
-const map: UTMBMap = new UTMBMap();
-map.addControls();
+CameraControls.install({ THREE });
+
+// eslint-disable-next-line no-new
+new UTMB();

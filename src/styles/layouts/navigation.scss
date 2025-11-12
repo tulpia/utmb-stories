@@ -1,0 +1,33 @@
+.navigation {
+  position: fixed;
+  bottom: 50px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 2;
+
+  &__trace {
+    background: white;
+    box-sizing: border-box;
+    padding: 23px 30px;
+    border-radius: 15px;
+    position: relative;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+
+    img {
+      width: 360px;
+      opacity: 0.3;
+
+      &.js-navigation-progress {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        clip-path: inset(0 0 0 100%);
+        opacity: 1;
+        pointer-events: none;
+      }
+    }
+  }
+}
